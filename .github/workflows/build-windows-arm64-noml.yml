@@ -34,6 +34,27 @@ jobs:
         run: |
           git clone https://github.com/microsoft/onnxruntime --recursive --branch "${{ inputs.onnxruntime-ref }}" --single-branch --depth 1 onnxruntime-src
 
+      - name: Patch Eigen archive hash
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $oldHash = "5ea4d05e62d7f954a46b3213f9b2535bdd866803"
+          $newHash = "51982be81bbe52572b54180454df11a3ece9a934"
+          $files = Get-ChildItem -Path onnxruntime-src -Recurse -File |
+            Select-String -Pattern $oldHash -List |
+            Select-Object -ExpandProperty Path
+
+          if (!$files) {
+            throw "Eigen archive hash $oldHash was not found in ONNX Runtime sources"
+          }
+
+          foreach ($file in $files) {
+            $content = Get-Content -LiteralPath $file -Raw
+            $content = $content.Replace($oldHash, $newHash)
+            Set-Content -LiteralPath $file -Value $content -NoNewline
+            Write-Host "Patched Eigen archive hash in $file"
+          }
+
       - name: Install host protoc
         shell: pwsh
         run: |
