@@ -201,3 +201,5 @@ WixTools/
 
 # Training checkpoints
 tools/train-data/**/checkpoint
+
+onnxruntime-src/
