@@ -15,4 +15,4 @@ none	x86_64-apple-darwin	https://parcel.pyke.io/v2/delivery/ortrs/packages/msort
 none	x86_64-unknown-linux-gnu	https://parcel.pyke.io/v2/delivery/ortrs/packages/msort-binary/1.20.0/ortrs_static-v1.20.0-x86_64-unknown-linux-gnu.tgz	F88A8C1E4B4813A1CFA79AF3F35B23ADDF2F0F36E66C5CD7C88103CB9B30509D
 none	aarch64-apple-darwin	https://parcel.pyke.io/v2/delivery/ortrs/packages/msort-binary/1.20.0/ortrs_static-v1.20.0-aarch64-apple-darwin.tgz	5EAFA0AF54D630C4D4D9F459CB95E3CFF442993F0FFA50402695186F9B1A38A5
 noml	x86_64-pc-windows-msvc	https://github.com/biliticket/ort/releases/download/test/x86_64-pc-windows-msvc-noml-1.21.0.tgz	9abcac5d4a729e5f0adbf5bb328fc42d3cae1e98ae8dab94fbbf71bb4fb6d8b4
-noml	aarch64-pc-windows-msvc	https://github.com/firefly001988/ort/releases/download/pre-build/aarch64-pc-windows-msvc-noml-1.21.0.tgz	9c5bd2775ad3fb6c10f127ad1e88962260a00d3974f7a8a61b7cbd897b8c031b
+noml	aarch64-pc-windows-msvc	https://github.com/firefly001988/ort/releases/download/test/aarch64-pc-windows-msvc-noml-1.21.0.tgz	4d54d3381a4b4d95653d70dd036a9f2f44c7fc2aa8c3159e3ceb5c6c90936a90
