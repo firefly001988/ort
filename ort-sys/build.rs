@@ -444,7 +444,7 @@ fn prepare_libort_dir() -> (PathBuf, bool) {
 			let feature_set = if !feature_set.is_empty() { feature_set.join(",") } else { "none".to_owned() };
 			println!("selected feature set: {feature_set}");
 			let mut dist = find_dist(&target, &feature_set);
-			if dist.is_none() && feature_set != "none" {
+			if dist.is_none() && feature_set != "none" && feature_set != "noml" {
 				dist = find_dist(&target, "none");
 			}
 

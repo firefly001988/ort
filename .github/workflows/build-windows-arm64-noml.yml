@@ -59,7 +59,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $protocVersion = "25.1"
+          $protocVersion = "21.12"
           $zipPath = Join-Path $env:RUNNER_TEMP "protoc.zip"
           $installDir = Join-Path $env:RUNNER_TEMP "protoc"
           Invoke-WebRequest `
@@ -71,6 +71,11 @@ jobs:
             throw "protoc.exe not found at $protoc"
           }
           "PROTOC=$protoc" >> $env:GITHUB_ENV
+
+      - name: Install Python build dependencies
+        shell: pwsh
+        run: |
+          python -m pip install flatbuffers==23.5.26
 
       - name: Build ONNX Runtime
         shell: pwsh
@@ -87,6 +92,9 @@ jobs:
             --build_shared_lib `
             --cmake_generator "Visual Studio 17 2022" `
             --arm64 `
+            --cmake_extra_defines `
+              CMAKE_DISABLE_FIND_PACKAGE_Flatbuffers=ON `
+              CMAKE_DISABLE_FIND_PACKAGE_flatbuffers=ON `
             --path_to_protoc_exe "$env:PROTOC"
 
       - name: Package ONNX Runtime
