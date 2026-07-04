@@ -34,6 +34,23 @@ jobs:
         run: |
           git clone https://github.com/microsoft/onnxruntime --recursive --branch "${{ inputs.onnxruntime-ref }}" --single-branch --depth 1 onnxruntime-src
 
+      - name: Install host protoc
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $protocVersion = "25.1"
+          $zipPath = Join-Path $env:RUNNER_TEMP "protoc.zip"
+          $installDir = Join-Path $env:RUNNER_TEMP "protoc"
+          Invoke-WebRequest `
+            -Uri "https://github.com/protocolbuffers/protobuf/releases/download/v$protocVersion/protoc-$protocVersion-win64.zip" `
+            -OutFile $zipPath
+          Expand-Archive -LiteralPath $zipPath -DestinationPath $installDir
+          $protoc = Join-Path $installDir "bin\protoc.exe"
+          if (!(Test-Path -LiteralPath $protoc)) {
+            throw "protoc.exe not found at $protoc"
+          }
+          "PROTOC=$protoc" >> $env:GITHUB_ENV
+
       - name: Build ONNX Runtime
         shell: pwsh
         working-directory: onnxruntime-src
@@ -48,7 +65,8 @@ jobs:
             --skip_tests `
             --build_shared_lib `
             --cmake_generator "Visual Studio 17 2022" `
-            --arm64
+            --arm64 `
+            --path_to_protoc_exe "$env:PROTOC"
 
       - name: Package ONNX Runtime
         id: package
