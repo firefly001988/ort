@@ -433,7 +433,10 @@ fn prepare_libort_dir() -> (PathBuf, bool) {
 
 			let mut flag = true;
 
-			if !cfg!(feature = "directml") && !cfg!(feature = "cuda") && (target == "x86_64-pc-windows-msvc" || target == "i686-pc-windows-msvc") {
+			if !cfg!(feature = "directml")
+				&& !cfg!(feature = "cuda")
+				&& (target == "x86_64-pc-windows-msvc" || target == "i686-pc-windows-msvc" || target == "aarch64-pc-windows-msvc")
+			{
 				feature_set.push("noml");
 				flag = false;
 			}

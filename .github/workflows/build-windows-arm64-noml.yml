@@ -1,0 +1,106 @@
+name: Build Windows ARM64 noml package
+
+on:
+  workflow_dispatch:
+    inputs:
+      onnxruntime-ref:
+        type: string
+        description: "ONNX Runtime git ref"
+        default: "v1.21.0"
+      release-tag:
+        type: string
+        description: "GitHub release tag to upload to"
+        default: "test"
+      upload-release:
+        type: boolean
+        description: "Upload package to the release tag"
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: aarch64-pc-windows-msvc noml
+    runs-on: windows-11-arm
+    env:
+      PACKAGE_NAME: aarch64-pc-windows-msvc-noml-1.21.0.tgz
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout ONNX Runtime
+        shell: pwsh
+        run: |
+          git clone https://github.com/microsoft/onnxruntime --recursive --branch "${{ inputs.onnxruntime-ref }}" --single-branch --depth 1 onnxruntime-src
+
+      - name: Build ONNX Runtime
+        shell: pwsh
+        working-directory: onnxruntime-src
+        run: |
+          .\build.bat `
+            --update `
+            --build `
+            --config Release `
+            --parallel `
+            --compile_no_warning_as_error `
+            --skip_submodule_sync `
+            --skip_tests `
+            --build_shared_lib `
+            --cmake_generator "Visual Studio 17 2022" `
+            --arm64
+
+      - name: Package ONNX Runtime
+        id: package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $packageRoot = Join-Path $PWD "package\onnxruntime"
+          $libDir = Join-Path $packageRoot "lib"
+          New-Item -ItemType Directory -Force -Path $libDir | Out-Null
+
+          $buildRoot = Join-Path $PWD "onnxruntime-src\build\Windows\Release"
+          $dll = Get-ChildItem -Path $buildRoot -Recurse -Filter "onnxruntime.dll" | Select-Object -First 1
+          $lib = Get-ChildItem -Path $buildRoot -Recurse -Filter "onnxruntime.lib" | Select-Object -First 1
+
+          if ($null -eq $dll) {
+            throw "onnxruntime.dll not found under $buildRoot"
+          }
+          if ($null -eq $lib) {
+            throw "onnxruntime.lib not found under $buildRoot"
+          }
+
+          Copy-Item -LiteralPath $dll.FullName -Destination $libDir
+          Copy-Item -LiteralPath $lib.FullName -Destination $libDir
+
+          tar -czf $env:PACKAGE_NAME -C package onnxruntime
+
+          $sha = (Get-FileHash -Algorithm SHA256 -LiteralPath $env:PACKAGE_NAME).Hash.ToLowerInvariant()
+          $url = "https://github.com/${{ github.repository }}/releases/download/${{ inputs.release-tag }}/$env:PACKAGE_NAME"
+          $distLine = "noml`taarch64-pc-windows-msvc`t$url`t$sha"
+
+          "sha256=$sha" >> $env:GITHUB_OUTPUT
+          "url=$url" >> $env:GITHUB_OUTPUT
+          "dist-line=$distLine" >> $env:GITHUB_OUTPUT
+
+          Write-Host "dist.txt line:"
+          Write-Host $distLine
+
+          "### dist.txt line" >> $env:GITHUB_STEP_SUMMARY
+          '```' >> $env:GITHUB_STEP_SUMMARY
+          $distLine >> $env:GITHUB_STEP_SUMMARY
+          '```' >> $env:GITHUB_STEP_SUMMARY
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ env.PACKAGE_NAME }}
+          if-no-files-found: error
+
+      - name: Upload release asset
+        if: inputs.upload-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release-tag }}
+          files: ${{ env.PACKAGE_NAME }}
